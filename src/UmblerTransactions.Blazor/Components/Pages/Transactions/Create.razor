@@ -1,0 +1,154 @@
+﻿@page "/"
+
+@rendermode InteractiveServer
+@inject ITransactionService _service
+@inject NavigationManager _navigation
+@inject SweetAlertService _alert
+
+<PageTitle>Criar uma transação</PageTitle>
+
+
+@if (Transaction is not null)
+{
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-6">
+            <div class="card p-3 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <h3 class="card-title">Criar uma nova transação</h3>
+                        <div>
+                            <button class="btn btn-secondary me-2" @onclick="CaptureTransaction">Cancelar transação</button>
+                            <button class="btn btn-primary" @onclick="CaptureTransaction">Capturar transação</button>
+                        </div>
+                    </div>
+                    <EditForm Model="Transaction" method="post" OnValidSubmit="@OnValidSubmit" OnInvalidSubmit="@OnInvalidSubmit" FormName="AddTrasactionForm" autocomplete="off" Enhance>
+                        <DataAnnotationsValidator />
+
+                        <div class="mb-3">
+                            <label for="nomeCompleto" class="form-label">Nome completo</label>
+                            <InputText id="nomeCompleto" @bind-Value="Transaction.Customer.Name" class="form-control" Placeholder="Ex: John Ronald Reuel Tolkien" />
+                            <ValidationMessage For="()=> Transaction.Customer.Name" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Email" class="form-label">Email</label>
+                            <InputText @bind-Value="Transaction.Customer.Email" class="form-control" Placeholder="example@example.com" />
+                            <ValidationMessage For="()=> Transaction.Customer.Email" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="NúmeroCartão" class="form-label">Número do cartão</label>
+                            <InputText @bind-Value="Transaction.Payment.CreditCard.CardNumber" class="form-control" Placeholder="1234 5678 9012 3456" />
+                            <ValidationMessage For="()=> Transaction.Payment.CreditCard.CardNumber" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="NomeImpressoCartão" class="form-label">Nome impresso no cartão</label>
+                            <InputText @bind-Value="Transaction.Payment.CreditCard.Holder" class="form-control" Placeholder="Ex: John Ronald Reuel Tolkien" />
+                            <ValidationMessage For="()=> Transaction.Payment.CreditCard.Holder" />
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="mb-3 col">
+                                <label for="Validade" class="form-label">Validade</label>
+                                <InputText @bind-Value="Transaction.Payment.CreditCard.ExpirationDate" class="form-control" Placeholder="MM / AAAA" />
+                                <ValidationMessage For="()=> Transaction.Payment.CreditCard.ExpirationDate" />
+                            </div>
+
+                            <div class="mb-3 col">
+                                <label for="Cvv" class="form-label">CVV</label>
+                                <InputText @bind-Value="Transaction.Payment.CreditCard.SecurityCode" class="form-control" Placeholder="•••" />
+                                <ValidationMessage For="()=> Transaction.Payment.CreditCard.SecurityCode" />
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="mb-3 col">
+                                <label for="ValorPedido" class="form-label">Valor do pedido</label>
+                                <InputNumber @bind-Value="Transaction.Payment.Amount" class="form-control" Placeholder="Digite o valor" />
+                                <ValidationMessage For="()=> Transaction.Payment.Amount" />
+                            </div>
+
+                            <div class="mb-3 col">
+                                <label for="Parcelamento" class="form-label">Parcelamento</label>
+                                <select class="form-control" @onchange="OnInstallmentsChanged">
+                                    <option value="1">1x à vista</option>
+                                    <option value="2">2x sem juros</option>
+                                    <option value="3">3x sem juros</option>
+                                    <option value="4">4x sem juros</option>
+                                    <option value="5">5x sem juros</option>
+                                    <option value="6">6x sem juros</option>
+                                    <option value="7">7x com juros*</option>
+                                    <option value="8">8x com juros*</option>
+                                    <option value="9">9x com juros*</option>
+                                    <option value="10">10x com juros*</option>
+                                    <option value="11">11x com juros*</option>
+                                    <option value="12">12x com juros*</option>
+                                </select>
+                                <ValidationMessage For="()=> Transaction.Payment.Installments" />
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-center justify-content-evenly">
+                            <button type="submit" class="btn btn-primary col-6">Confirmar</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromForm]
+    private TransactionRequest? Transaction { get; set; } = new()
+    {
+        Customer = new CustomerRequest(),
+        Payment = new PaymentRequest
+        {
+            CreditCard = new CreditCardRequest(),
+            InitiatedTransactionIndicator = new InitiatedTransactionIndicatorRequest()
+        }
+    };
+
+    private void OnInstallmentsChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int value))
+            Transaction.Payment.Installments = value;
+    }
+
+    private async Task OnValidSubmit(EditContext editContext)
+    {
+        var context = editContext;
+
+        var response = await _service.Add(Transaction);
+        var paymentId = response.Payment.PaymentId;
+
+        sucessAlert(paymentId);
+    }
+
+    private void sucessAlert(Guid id)
+    {
+        _alert.FireAsync(new SweetAlertOptions
+            {
+                Title = "Transação realizada!",
+                Text = $"Id do pagamento: {id}",
+                Icon = SweetAlertIcon.Success
+            });
+    }
+
+    private void OnInvalidSubmit(EditContext editContext)
+    {
+        var context = editContext;
+    }
+
+    public void CaptureTransaction()
+    {
+        _navigation.NavigateTo("/captures");
+    }
+
+    public void CancellationTransaction()
+    {
+        _navigation.NavigateTo("/cancellations");
+    }
+}

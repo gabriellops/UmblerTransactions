@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Entities\ConsultationEntity.cs" />
+    <Compile Remove="Interfaces\Repositories\IConsultationRepository.cs" />
+    <Compile Remove="Interfaces\Services\IConsultationService.cs" />
+    <Compile Remove="Services\ConsultationService.cs" />
+  </ItemGroup>
+
+</Project>

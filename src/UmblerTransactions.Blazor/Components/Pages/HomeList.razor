@@ -1,0 +1,66 @@
+﻿@page "/"
+
+@rendermode InteractiveServer
+@inject IConsultationService _service
+@inject NavigationManager navigation
+
+<PageTitle>Home</PageTitle>
+
+<div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-6">
+        <div class="card p-3 shadow-sm">
+            <div class="card-body">
+                @if (transactions is null)
+                {
+                    <div class="book-item">
+                        Carregando transações. Por favor, aguarde...
+                    </div>
+                }
+@*                 else if (transactions.Any())
+                {
+                    @foreach (var transaction in transactions)
+                    {
+                        <div class="book-item">
+                            <div class="book-card">
+                                <div class="book-card-body">
+                                    @transaction.PaymentConsultationEntity.FirstOrDefault()?.PaymentId | @transaction.PaymentConsultationEntity.FirstOrDefault()?.ReceveidDate.ToString()
+                                </div>
+                            </div>
+                        </div>
+                    }
+                } *@
+                else
+                {
+                    <div class="book-item">
+                        Nenhuma transação foi encontrada.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ConsultationEntity transactions;
+    private PaymentConsultationEntity paymentConsultation = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        transactions = await _service.GetByMerchantOrderId();
+    }
+
+    // public async void Capture(string merchantOrderId)
+    // {
+    //     transactions = await
+    // }
+
+    // public void Cancellation()
+    // {
+
+    // }
+
+    public void AddTransaction()
+    {
+        navigation.NavigateTo("/transactions");
+    }
+}
